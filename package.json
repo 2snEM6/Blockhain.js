@@ -1,0 +1,22 @@
+{
+  "name": "simpleblockchain",
+  "version": "1.0.0",
+  "description": "A simple blockchain implementation written in Javascript",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "blockchain",
+    "javascript"
+  ],
+  "author": "Daniel Limia Aspas",
+  "license": "MIT",
+  "dependencies": {
+    "crypto-js": "^3.1.9-1",
+    "elliptic": "^6.4.1",
+    "libp2p": "^0.23.1",
+    "merkletreejs": "0.0.11",
+    "ramda": "^0.25.0"
+  }
+}
