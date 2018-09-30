@@ -1,4 +1,4 @@
-const { UTXO } = require('UTXO');
+const { UTXO } = require('./UTXO');
 const { clone } = require('ramda');
 
 class UTXOPool {
@@ -52,6 +52,8 @@ class UTXOPool {
   clone() {
     return new UTXOPool(clone(this.utxos));
   }
-
-
 }
+
+module.exports = {
+  UTXOPool
+};

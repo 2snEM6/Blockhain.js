@@ -1,12 +1,15 @@
 const SHA256 = require('crypto-js/sha256');
-const Tools = require('./Tools');
+const { Tools } = require('./Tools');
+const { UTXOPool } = require('./UTXOPool');
 
 class Block {
   constructor(height, blockchain, previousBlockHash = '') {
 
     this.blockchain = blockchain;
+    this.feeBeneficiaryAddress = '0xLIMIA';
 
     this.transactions = [];
+    this.utxoPool = new UTXOPool();
     this.header = {
       version: 1,
       previousBlockHash: previousBlockHash,
@@ -19,6 +22,30 @@ class Block {
     this.hash = this.calculateHash();
   }
 
+  isRoot() {
+    return this.header.previousBlockHash === 'root';
+  }
+
+  isValid() {
+    return this.isRoot() || this.hash === this.calculateHash();
+  }
+
+  addTransaction(transaction) {
+    if (!this.isValidTransaction(transaction)) return;
+    this.transactions[transaction.hash] = transaction;
+    this.utxoPool.handleTransaction(this.transactions, this.feeBeneficiaryAddress);
+    this.hash = this.calculateHash();
+  }
+
+  isValidTransaction(transaction) {
+    return this.utxoPool.isValidTransaction(transaction) && transaction.hasValidSignature();
+  }
+
+  addingTransactionErrorMessage(transaction) {
+    if (!transaction.hasValidSignature()) return "Signature is not valid";
+    return this.utxoPool.addingTransactionErrorMessage(transaction);
+  }
+
   calculateHash() {
     this.header.merkleRootHash = this.calculateHashMerkleRoot();
     return SHA256(JSON.stringify(this.header).toString()).toString();
@@ -28,20 +55,6 @@ class Block {
     if (this.transactions.length === 0) return '';
     const transactionHashes = this.transactions.map((transaction) => transaction.hash);
     return Tools.computeMerkleRootHash(transactionHashes);
-  }
-
-  addTransaction(transaction) {
-    if (!this.isValidTransaction(transaction)) return;
-    this.transactions.push(transaction);
-    this.hash = this.calculateHash();
-  }
-
-  isValidTransaction(transaction) {
-    return transaction.hasValidSignature();
-  }
-
-  isValid() {
-    return this.hash === this.calculateHash();
   }
 
   mineBlock(difficulty) {

@@ -1,13 +1,12 @@
-const MerkleTree = require('merkletreejs');
-const SHA256 = require('crypto-js/sha256');
-const { path, reduce, maxBy } = require('ramda');
+const { Blockchain } = require('./Blockchain');
+const { Block } = require('./Block');
+
+const mainNet = new Blockchain('Main net');
+
+console.log(mainNet.isChainValid());
 
 
-const array = [{ a: {height: 1}}, { a: {height: 2}}];
-
-const filterByMaximumHeight = maxBy(path(['a', 'height']));
-
-const result = reduce(filterByMaximumHeight, array[0], array);
+mainNet.addBlock(new Block());
 
 
-console.log(result);
+console.log(JSON.stringify(mainNet, null, 2));

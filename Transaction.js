@@ -12,8 +12,7 @@ class Transaction {
 
   hasValidSignature() {
     return (
-      this.signature !== undefined &&
-        verifySignature(this.hash, this.signature, this.inputPublicKey);
+      this.signature !== undefined && verifySignature(this.hash, this.signature, this.inputPublicKey)
     )
   }
 
