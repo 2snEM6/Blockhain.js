@@ -20,3 +20,7 @@ class Transaction {
     return SHA256(this.inputPublicKey + this.outputPublicKey + this.amount + this.fee).toString();
   }
 }
+
+module.exports = {
+  Transaction
+};

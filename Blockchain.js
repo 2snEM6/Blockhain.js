@@ -29,11 +29,6 @@ class Blockchain {
     return this.chain[block.hash] !== undefined;
   }
 
-  mineBlock() {
-    const block = new Block(this.chain.length, this);
-
-  }
-
   addBlock(block) {
     if (!block.isValid()) return;
     if (this.containsBlock(block)) return;
@@ -77,23 +72,6 @@ class Blockchain {
   getMaximumHeightBlock() {
     const maxByHeightFunction = maxBy(path(["header", "height"]));
     return reduce(maxByHeightFunction, this.chain[0], this.chain);
-  }
-
-  minePendingTransactions(minerRewardAddress) {
-    const block = new Block(this, this.pendingTransactions, this.getLatestBlock().hash);
-    const mined = block.mineBlock(this.difficulty);
-
-    if (mined) {
-      console.log('Block #' + this.chain.length + ' successfully mined');
-      this.chain.push(block);
-      this.pendingTransactions = [
-        new Transaction(null, minerRewardAddress, this.miningReward)
-      ];
-
-      return true;
-    }
-    console.log('Failure mining block #' + this.chain.length);
-    return false;
   }
 
   createTransaction(transaction) {

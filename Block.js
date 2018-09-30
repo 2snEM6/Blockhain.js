@@ -10,7 +10,7 @@ class Block {
 
     this.transactions = [];
     this.utxoPool = new UTXOPool();
-    this.header = {
+    this._header = {
       version: 1,
       previousBlockHash: previousBlockHash,
       merkleRootHash: '',
@@ -23,11 +23,11 @@ class Block {
   }
 
   isRoot() {
-    return this.header.previousBlockHash === 'root';
+    return this._header.previousBlockHash === 'root';
   }
 
   isValid() {
-    return this.isRoot() || this.hash === this.calculateHash();
+    return this.isRoot() ||this.hash === this.calculateHash();
   }
 
   addTransaction(transaction) {
@@ -47,8 +47,8 @@ class Block {
   }
 
   calculateHash() {
-    this.header.merkleRootHash = this.calculateHashMerkleRoot();
-    return SHA256(JSON.stringify(this.header).toString()).toString();
+    this._header.merkleRootHash = this.calculateHashMerkleRoot();
+    return SHA256(JSON.stringify(this._header).toString()).toString();
   }
 
   calculateHashMerkleRoot() {
@@ -59,7 +59,7 @@ class Block {
 
   mineBlock(difficulty) {
     while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join('0')) {
-      this.header.nonce++;
+      this._header.nonce++;
       this.hash = this.calculateHash();
     }
     return this.isValid();

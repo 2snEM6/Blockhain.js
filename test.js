@@ -1,12 +1,15 @@
 const { Blockchain } = require('./Blockchain');
 const { Block } = require('./Block');
+const { Transaction } = require('./Transaction');
+const { generatePair, sign } = require('./crypto');
 
 const mainNet = new Blockchain('Main net');
 
-console.log(mainNet.isChainValid());
+const {publicKey, privateKey} = generatePair();
+
+const transaction = new Transaction('OxLIMIA', '0xSILVIA', 300, 10, );
 
 
-mainNet.addBlock(new Block());
 
 
-console.log(JSON.stringify(mainNet, null, 2));
+
