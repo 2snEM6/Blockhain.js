@@ -3,7 +3,6 @@ const ec = new elliptic.ec("secp256k1");
 
 function generatePair() {
   const keypair = ec.genKeyPair();
-  window.keypair = keypair;
   return {
     publicKey: keypair.getPublic("hex"),
     privateKey: keypair.getPrivate("hex")

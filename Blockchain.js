@@ -8,7 +8,7 @@ class Blockchain {
     this.genesisBlock = null;
     this.difficulty = 3;
     this.chain = {};
-    this.pendingTransactions = [];
+    this.pendingTransactions = {};
     this.miningReward = 100;
 
     this.createGenesisBlock();
@@ -34,8 +34,8 @@ class Blockchain {
     if (this.containsBlock(block)) return;
 
     // check that the parent is actually existent and the advertised height is correct
-    const parent = this.chain[block.header.previousBlockHash];
-    if (parent === undefined && parent.height + 1 !== block.height) return;
+    const parent = this.chain[block._header.previousBlockHash];
+    if (parent === undefined && parent._header.height + 1 !== block.height) return;
 
     const isParentMaxHeight = this.getMaximumHeightBlock().hash === parent.hash;
 
@@ -70,32 +70,19 @@ class Blockchain {
 
 
   getMaximumHeightBlock() {
-    const maxByHeightFunction = maxBy(path(["header", "height"]));
-    return reduce(maxByHeightFunction, this.chain[0], this.chain);
+    const blocks = values(this.chain);
+    const maxByHeightFunction = maxBy(path(["_header", "height"]));
+    return reduce(maxByHeightFunction, blocks[0], blocks);
   }
 
   createTransaction(transaction) {
-    this.pendingTransactions.push(transaction);
+    this.pendingTransactions[transaction.hash] = transaction;
   }
 
   getBalanceOfAddress(address) {
-    let balance = 0;
-
-    for (const block of this.chain) {
-      for (const transation of block.transactions) {
-        if (transation.fromAddress === address) {
-          balance -= transation.amount;
-        }
-
-        if (transation.toAddress === address) {
-          balance += transation.amount;
-        }
-      }
-    }
-
-    return balance;
+    const latestBlock = this.getMaximumHeightBlock();
+    return latestBlock.utxoPool.utxos[address].amount;
   }
-
 
   isChainValid() {
     for (let i = 1; i < this.chain.length; i++) {
@@ -107,7 +94,7 @@ class Blockchain {
         throw Error('Chain invalid at block #' + i + ' Reason: hash mismatch');
       }
 
-      if (currentBlock.header.previousBlockHash !== previousBlock.hash) {
+      if (currentBlock._header.previousBlockHash !== previousBlock.hash) {
         console.log('Chain invalid at block #' + i + ' Reason: previous hash mismatch');
         throw Error('Chain invalid at block #' + i + ' Reason: previous hash mismatch');      }
     }

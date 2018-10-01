@@ -15,7 +15,7 @@ class UTXOPool {
   }
 
   handleTransaction(transaction, feeReceiverPublicKey) {
-    if (this.isValidTransaction(transaction)) return;
+    if (!this.isValidTransaction(transaction)) return;
 
     const inputUTXO = this.utxos[transaction.inputPublicKey];
     inputUTXO.amount -= transaction.amount;

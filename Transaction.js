@@ -1,7 +1,8 @@
 const { verifySignature } = require('./crypto');
+const SHA256 = require('crypto-js/sha256');
 
 class Transaction {
-  constructor(inputPublicKey, outputPublicKey, amount, fee, signature) {
+  constructor(inputPublicKey, outputPublicKey, amount, fee, signature = '') {
     this.inputPublicKey = inputPublicKey;
     this.outputPublicKey = outputPublicKey;
     this.amount = amount;
