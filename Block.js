@@ -30,15 +30,15 @@ class Block {
     return this.isRoot() ||this.hash === this.calculateHash();
   }
 
-  createChild(feeBeneficiaryAddress) {
+  createChild(feeBeneficiaryAddress, difficulty) {
     const block = new Block(this._header.height + 1, this.blockchain,
       this._header.previousBlockHash = this.hash, clone(this.utxoPool), feeBeneficiaryAddress);
-    // For convenience, allow the miner to immediately spend the coinbase coins
-    block.utxoPool.addUTXO(feeBeneficiaryAddress, 12.5); // TODO This needs to be added as a transaction
     return block;
+    // For convenience, allow the miner to immediately spend the coinbase coins
+
   }
 
-  addTransaction(transaction) {
+  addTransactionIfValid(transaction) {
     if (!this.isValidTransaction(transaction)) return;
     this.transactions[transaction.hash] = transaction;
     this.utxoPool.handleTransaction(transaction, this.feeBeneficiaryAddress);
@@ -65,12 +65,18 @@ class Block {
     return Tools.computeMerkleRootHash(transactionHashes);
   }
 
-  mineBlock(difficulty) {
+  mineBlock(difficulty, feeBeneficiaryAddress) {
     while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join('0')) {
       this._header.nonce++;
       this.hash = this.calculateHash();
     }
-    return this.isValid();
+
+    if (this.isValid()) {
+      this.utxoPool.addUTXO(feeBeneficiaryAddress, 12.5); // TODO This needs to be added as a transaction
+      return true;
+    } else {
+      return false;
+    }
   }
 }
 

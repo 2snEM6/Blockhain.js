@@ -1,4 +1,4 @@
-const { values, maxBy, path, reduce } = require('ramda');
+const { values, maxBy, path, reduce, pathOr, prop } = require('ramda');
 const { Block } = require('./Block');
 
 
@@ -21,52 +21,55 @@ class Blockchain {
     console.log('GENESIS BLOCK CREATED');
   }
 
-  getLatestBlock() {
-    return this.chain[this.chain.length - 1];
-  }
-
   containsBlock(block) {
     return this.chain[block.hash] !== undefined;
   }
 
-  addBlock(block) {
-    if (!block.isValid()) return;
-    if (this.containsBlock(block)) return;
+  getUnspentTransactionOutputsFromAddress(address) {
+    const utxoPool = this.getMaximumHeightBlock().utxoPool;
+    const getUTXOS = (address) => path(['utxos', address]);
+    return getUTXOS(address)(utxoPool);
+  }
 
-    // check that the parent is actually existent and the advertised height is correct
+  mineBlock(block, feeBeneficiaryAddress) {
+
+    if (this.containsBlock(block)) return {
+      mined: false,
+      reason: 'Block is already present in the chain.'
+    };
+
+
+    const mined = block.mineBlock(this.difficulty, feeBeneficiaryAddress);
+    if (!mined) return {
+      mined: false,
+      reason: 'Invalid block.'
+    };
+
     const parent = this.chain[block._header.previousBlockHash];
-    if (parent === undefined && parent._header.height + 1 !== block.height) return;
+    if (parent === undefined && parent._header.height + 1 !== block.height) return {
+      mined: false,
+      reaon: 'Incorrect height or parent block mismatch'
+    };
 
     const isParentMaxHeight = this.getMaximumHeightBlock().hash === parent.hash;
 
-    // clone the utxo pool of the parent and reconcile with the block
-    const newUtxoPool = parent.utxoPool.clone();
-    block.utxoPool = newUtxoPool;
-
-    // Add fee amount to the pool
-    block.utxoPool.addUTXO(block.feeBeneficiaryAddress, 12.5);
-
-    // Reapply transactions to validate them
-    const transactions = block.transactions;
-    block.transactions = {};
-    let containsInvalidTransactions = false;
-
-    Object.values(transactions).forEach(transaction => {
+    Object.values(block.transactions).forEach(transaction => {
       if (block.isValidTransaction(transaction)) {
-        block.addTransaction(transaction);
-
+        block.utxoPool.handleTransaction(transaction, this.feeBeneficiaryAddress);
         // if we have the transaction as a pending one on the chain, remove it from the pending pool if we are at max height
         if (isParentMaxHeight && this.pendingTransactions[transaction.hash])
           delete this.pendingTransactions[transaction.hash];
-      } else {
-        containsInvalidTransactions = true;
       }
     });
 
-    // If we found any invalid transactions, dont add the block
-    if (containsInvalidTransactions) return;
     this.chain[block.hash] = block;
+
+    return {
+      mined: true
+    }
   }
+
+
 
 
   getMaximumHeightBlock() {
@@ -75,13 +78,18 @@ class Blockchain {
     return reduce(maxByHeightFunction, blocks[0], blocks);
   }
 
-  createTransaction(transaction) {
+  addTransactionToThePool(transaction) {
     this.pendingTransactions[transaction.hash] = transaction;
   }
 
   getBalanceOfAddress(address) {
     const latestBlock = this.getMaximumHeightBlock();
-    return latestBlock.utxoPool.utxos[address].amount;
+    const getBalance = address => pathOr(0, ['utxoPool','utxos', address, 'amount']);
+    return getBalance(address)(latestBlock);
+  }
+
+  getPendingTransactions() {
+    return this.pendingTransactions;
   }
 
   isChainValid() {
